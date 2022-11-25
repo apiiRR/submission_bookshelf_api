@@ -2,12 +2,52 @@ const { nanoid } = require('nanoid');
 const books = require('./books');
 
 const getAllBooksHandler = (request, h) => {
+  const { name, reading, finished } = request.query;
+
+  let temp = [];
   let result = [];
 
   if (books.length > 0) {
-    result = books.map((book) => {
-      return { id: book.id, name: book.name, publisher: book.publisher };
-    });
+    if (name != undefined || reading != undefined || finished != undefined) {
+      if (name != undefined) {
+        temp = books.filter((book) => book.name.toLowerCase().includes(name.toLowerCase()));
+      }
+
+      if (reading != undefined) {
+        switch (reading) {
+          case "0":
+            temp = books.filter((book) => book.reading === false);
+            break;
+          case "1":
+            temp = books.filter((book) => book.reading === true);
+            break;
+          default:
+            temp = books.filter((book) => book.reading !== undefined);
+        }
+      }
+
+      if (finished != undefined) {
+        switch (finished) {
+          case "0":
+            temp = books.filter((book) => book.finished === false);
+            break;
+          case "1":
+            temp = books.filter((book) => book.finished === true);
+            break;
+          default:
+            temp = books.filter((book) => book.finished !== undefined);
+        }
+      }
+
+
+      result = temp.map((book) => {
+        return { id: book.id, name: book.name, publisher: book.publisher };
+      });
+    } else {
+      result = books.map((book) => {
+        return { id: book.id, name: book.name, publisher: book.publisher };
+      });
+    }
   }
 
   return {
@@ -122,7 +162,7 @@ const editBookHandler = (request, h) => {
   if (readPage > pageCount) {
     const response = h.response({
       status: 'fail',
-      message: 'Gagal memperbarui buku. readPage tidak boleh lebih dari pageCount'
+      message: 'Gagal memperbarui buku. readPage tidak boleh lebih besar dari pageCount'
     });
     response.code(400);
     return response;
